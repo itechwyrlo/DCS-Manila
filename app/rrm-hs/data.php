@@ -1,0 +1,35 @@
+<?php
+/**
+ * JSON API for RRM High School record list. Used for real-time sync on the dashboard.
+ */
+session_start();
+header("Content-Type: application/json; charset=utf-8");
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+
+if (!isset($_SESSION["account_id"]) || empty($_SESSION["account_id"])) {
+  http_response_code(401);
+  echo json_encode(["error" => "Unauthorized", "records" => []]);
+  exit;
+}
+
+include_once __DIR__ . "/../../core/repositories/database.php";
+include_once __DIR__ . "/../../core/repositories/rrm-record.php";
+
+$obj = new RrmRecord();
+$records = $obj->getRecordsByCategory(2);
+
+$out = [];
+foreach ($records as $r) {
+  $out[] = [
+    "record_id" => (int) $r["record_id"],
+    "control_no" => $r["control_no"] ?? "",
+    "client_name" => $r["client_name"] ?? "",
+    "status" => $r["status"] ?? "",
+    "office" => $r["office"] ?? "",
+    "section" => $r["section"] ?? "",
+    "created_date" => $r["created_date"] ?? ""
+  ];
+}
+
+echo json_encode(["records" => $out]);
